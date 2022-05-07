@@ -1,0 +1,58 @@
+{
+  "name": "timsy",
+  "version": "1.0.0",
+  "description": "Agnostic functional state machine with epic type support",
+  "author": "Christian Alfoni <christianalfoni@gmail.com>",
+  "license": "MIT",
+  "repository": "git+https://github.com/christianalfoni/timsy.git",
+  "module": "index.js",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "import": "./index.js"
+    },
+    "./react": {
+      "import": "./react/index.js"
+    }
+  },
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc --outDir . --module esnext && tsc --outDir cjs --module commonjs",
+    "clean": "rimraf cjs react/*.ts react/*.js react/*.map index.d.ts index.test.d.ts",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier '**/*.{md,js,jsx,json,ts,tsx}' --write",
+    "test": "jest",
+    "prebuild": "yarn typecheck && yarn clean",
+    "prepublish": "yarn build"
+  },
+  "keywords": [
+    "typescript",
+    "react",
+    "state",
+    "statemachine",
+    "fsm"
+  ],
+  "files": [
+    "cjs",
+    "react",
+    "index.js",
+    "index.js.map",
+    "index.d.ts"
+  ],
+  "devDependencies": {
+    "@types/jest": "^23.0.0",
+    "@types/node": "^8.0.0",
+    "dts-bundle": "^0.7.2",
+    "jest": "^28.1.0",
+    "pascal-case": "^2.0.1",
+    "prettier": "^2.2.1",
+    "rimraf": "^2.6.1",
+    "semver": "^6.3.0",
+    "ts-jest": "~28.0.1",
+    "tslib": "^2.1.0",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.13.0",
+    "tslint-plugin-prettier": "^2.0.0",
+    "typescript": "^4.6.4"
+  }
+}
