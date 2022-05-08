@@ -36,7 +36,7 @@ describe("machine", () => {
       FOO: {},
       BAR: {},
     });
-    expect(spawn(() => states.FOO()).getState()).toEqual({ state: "FOO" });
+    expect(spawn(states.FOO()).getState()).toEqual({ state: "FOO" });
   });
   it("should expose events as functions", () => {
     const states = createStates({
@@ -51,7 +51,7 @@ describe("machine", () => {
         SWITCH: () => () => states.FOO(),
       },
     });
-    const testMachine = spawn(() => states.FOO());
+    const testMachine = spawn(states.FOO());
 
     expect(typeof testMachine.events.SWITCH).toBe("function");
   });
@@ -68,7 +68,7 @@ describe("machine", () => {
         SWITCH: () => () => states.FOO(),
       },
     });
-    const testMachine = spawn(() => states.FOO());
+    const testMachine = spawn(states.FOO());
     expect(testMachine.getState()).toEqual({ state: "FOO" });
     testMachine.events.SWITCH();
     expect(testMachine.getState()).toEqual({ state: "BAR" });
@@ -84,7 +84,7 @@ describe("machine", () => {
         SWITCH: () => () => states.FOO(),
       },
     });
-    const testMachine = spawn(() => states.FOO());
+    const testMachine = spawn(states.FOO());
     expect(testMachine.getState()).toEqual({ state: "FOO" });
     testMachine.events.SWITCH();
     expect(testMachine.getState()).toEqual({ state: "FOO" });
@@ -103,7 +103,7 @@ describe("machine", () => {
         SWITCH: () => () => states.FOO(),
       },
     });
-    const testMachine = spawn(() => states.FOO());
+    const testMachine = spawn(states.FOO());
     testMachine.subscribe((state, event, oldState) => {
       expect(state).toEqual({ state: "BAR" });
       expect(event).toEqual({ type: "SWITCH", params: [] });
