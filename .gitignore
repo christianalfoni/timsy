@@ -8,6 +8,8 @@ lerna-debug.log*
 index.d.ts
 index.js
 index.js.map
+cjs
+react
 
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
