@@ -51,9 +51,7 @@ type TUnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (
 export type StateMachine<
   State extends Record<string, TStateCreator>,
   T extends Transitions<State>
-> = (
-  initializer: () => ReturnType<TStateCreatorWithState<State>[keyof State]>
-) => {
+> = (initialState: ReturnType<TStateCreatorWithState<State>[keyof State]>) => {
   dispose(): void;
   events: TUnionToIntersection<
     {
@@ -92,8 +90,8 @@ export function createMachine<
 
   const subscribers: Subscriber<State, T>[] = [];
 
-  return (initializer) => {
-    let currentState = initializer();
+  return (initialState) => {
+    let currentState = initialState;
     const events = {} as ReturnType<StateMachine<State, T>>["events"];
 
     for (let state in transitions) {
