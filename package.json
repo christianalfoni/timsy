@@ -45,6 +45,7 @@
     "@types/node": "^8.0.0",
     "dts-bundle": "^0.7.2",
     "jest": "^28.1.0",
+    "jest-environment-jsdom": "^28.1.0",
     "pascal-case": "^2.0.1",
     "prettier": "^2.2.1",
     "react": "^18.1.0",
