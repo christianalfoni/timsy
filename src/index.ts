@@ -1,10 +1,17 @@
-type TStateCreator = (...params: any[]) => object;
+export type TStateCreator = (...params: any[]) => object;
 
-type TStateCreatorWithState<State extends Record<string, TStateCreator>> = {
+export type TStateCreators = Record<string, TStateCreator>;
+
+type TStateCreatorWithState<State extends TStateCreators> = {
   [K in keyof State]: (
     ...params: Parameters<State[K]>
   ) => ReturnType<State[K]> & { state: K };
 };
+
+export type TStateCreatosrWithState<T extends TStateCreators> = Record<
+  string,
+  TStateCreatorWithState<T>
+>;
 
 export interface IState {
   state: string;
@@ -14,7 +21,7 @@ export interface IEvent {
   type: string;
 }
 
-type Transitions<T extends Record<string, TStateCreator>> = {
+export type TTransitions<T extends TStateCreators> = {
   [S in keyof T]: {
     [event: string]: (
       ...params: any[]
@@ -23,8 +30,8 @@ type Transitions<T extends Record<string, TStateCreator>> = {
 };
 
 export type Subscriber<
-  State extends Record<string, TStateCreator>,
-  T extends Transitions<State>
+  State extends TStateCreators,
+  T extends TTransitions<State>
 > = (
   state: {
     [S in keyof State]: { state: S } & ReturnType<State[S]>;
@@ -49,11 +56,9 @@ type TUnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (
   : never;
 
 export type StateMachine<
-  State extends Record<string, TStateCreator>,
-  T extends Transitions<State>
-> = (
-  initializer: () => ReturnType<TStateCreatorWithState<State>[keyof State]>
-) => {
+  State extends TStateCreators,
+  T extends TTransitions<State>
+> = {
   dispose(): void;
   events: TUnionToIntersection<
     {
@@ -65,12 +70,17 @@ export type StateMachine<
   getState(): {
     [S in keyof State]: ReturnType<TStateCreatorWithState<State>[S]>;
   }[keyof State];
-  subscribe: (subscriber: Subscriber<State, T>) => void;
+  subscribe: (subscriber: Subscriber<State, T>) => () => void;
 };
 
-export function createStates<State extends Record<string, TStateCreator>>(
-  states: State
-) {
+export type StateMachineCreator<
+  State extends TStateCreators,
+  T extends TTransitions<State>
+> = (
+  initialState: ReturnType<TStateCreatorWithState<State>[keyof State]>
+) => StateMachine<State, T>;
+
+export function createStates<State extends TStateCreators>(states: State) {
   const stateCreators = {} as TStateCreatorWithState<State>;
 
   for (let state in states) {
@@ -85,16 +95,16 @@ export function createStates<State extends Record<string, TStateCreator>>(
 }
 
 export function createMachine<
-  State extends Record<string, TStateCreator>,
-  T extends Transitions<State>
->(_: State, transitions: T): StateMachine<State, T> {
+  State extends TStateCreators,
+  T extends TTransitions<State>
+>(_: State, transitions: T): StateMachineCreator<State, T> {
   let isDisposed = false;
 
   const subscribers: Subscriber<State, T>[] = [];
 
-  return (initializer) => {
-    let currentState = initializer();
-    const events = {} as ReturnType<StateMachine<State, T>>["events"];
+  return (initialState) => {
+    let currentState = initialState;
+    const events = {} as ReturnType<StateMachineCreator<State, T>>["events"];
 
     for (let state in transitions) {
       for (let event in transitions[state]) {
