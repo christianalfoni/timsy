@@ -3,7 +3,7 @@ import {
   StateMachineCreator,
   StateMachine,
   TStateCreator,
-  TStateCreatosrWithState,
+  TStateCreatorsWithState,
   TTransitions,
 } from "..";
 import { createMachine, createStates } from "..";

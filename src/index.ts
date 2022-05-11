@@ -8,7 +8,7 @@ type TStateCreatorWithState<State extends TStateCreators> = {
   ) => ReturnType<State[K]> & { state: K };
 };
 
-export type TStateCreatosrWithState<T extends TStateCreators> = Record<
+export type TStateCreatorsWithState<T extends TStateCreators> = Record<
   string,
   TStateCreatorWithState<T>
 >;
