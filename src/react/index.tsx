@@ -1,7 +1,7 @@
 import * as React from "react";
 import {
-  StateMachineCreator,
   StateMachine,
+  StateMachineCreator,
   TStateCreator,
   TTransitions,
 } from "..";

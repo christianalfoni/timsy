@@ -3,7 +3,10 @@
     "target": "ES2017",
     "rootDir": "src",
     "outDir": ".code",
-    "lib": ["dom", "es2018"],
+    "lib": [
+      "dom",
+      "es2018"
+    ],
     "jsx": "react",
     "moduleResolution": "node",
     "skipLibCheck": true,
@@ -16,5 +19,12 @@
     "resolveJsonModule": true,
     "strict": true
   },
-  "exclude": ["node_modules", "cjs", "react"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "cjs",
+    "react"
+  ]
 }
