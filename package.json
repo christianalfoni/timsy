@@ -2,11 +2,16 @@
   "name": "timsy",
   "version": "1.0.0",
   "description": "Agnostic functional state machine with epic type support",
-  "author": "Christian Alfoni <christianalfoni@gmail.com>",
-  "license": "MIT",
+  "keywords": [
+    "typescript",
+    "react",
+    "state",
+    "statemachine",
+    "fsm"
+  ],
   "repository": "git+https://github.com/christianalfoni/timsy.git",
-  "module": "index.js",
-  "main": "index.js",
+  "license": "MIT",
+  "author": "Christian Alfoni <christianalfoni@gmail.com>",
   "exports": {
     ".": {
       "import": "./index.js"
@@ -15,24 +20,9 @@
       "import": "./react/index.js"
     }
   },
+  "main": "index.js",
+  "module": "index.js",
   "types": "index.d.ts",
-  "scripts": {
-    "build": "tsc --outDir . --module esnext && tsc --outDir cjs --module commonjs",
-    "clean": "rimraf cjs react/*.ts react/*.js react/*.map index.d.ts index.test.d.ts",
-    "typecheck": "tsc --noEmit",
-    "eslint": "eslint --fix '*.json' 'src/**/*.{ts,tsx}'",
-    "format": "prettier '**/*.{md,js,jsx,json,ts,tsx}' --write",
-    "test": "jest --env=jsdom",
-    "prebuild": "yarn typecheck && yarn clean",
-    "prepublish": "yarn build"
-  },
-  "keywords": [
-    "typescript",
-    "react",
-    "state",
-    "statemachine",
-    "fsm"
-  ],
   "files": [
     "cjs",
     "react",
@@ -40,6 +30,17 @@
     "index.js.map",
     "index.d.ts"
   ],
+  "scripts": {
+    "prebuild": "yarn typecheck && yarn clean",
+    "build": "tsc --outDir . --module esnext && tsc --outDir cjs --module commonjs",
+    "clean": "rimraf cjs react/*.ts react/*.js react/*.map index.d.ts index.test.d.ts",
+    "eslint": "eslint --fix '*.json' 'src/**/*.{ts,tsx}'",
+    "format": "prettier '**/*.{md,js,jsx,json,ts,tsx}' --write",
+    "prepare": "husky install",
+    "prepublish": "yarn build",
+    "test": "jest --env=jsdom",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
     "@testing-library/react": "^13.2.0",
     "@types/jest": "^23.0.0",
@@ -51,14 +52,17 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jest": "^26.1.5",
     "eslint-plugin-react": "^7.29.4",
+    "husky": "^8.0.0",
     "jest": "^28.1.0",
     "jest-environment-jsdom": "^28.1.0",
+    "lint-staged": "^12.4.1",
     "pascal-case": "^2.0.1",
     "prettier": "2.6.2",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "rimraf": "^2.6.1",
     "semver": "^6.3.0",
+    "sort-package-json": "^1.57.0",
     "ts-jest": "~28.0.1",
     "tslib": "^2.1.0",
     "tslint": "^5.11.0",
