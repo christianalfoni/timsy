@@ -1,12 +1,10 @@
 import * as React from "react";
 import {
-  StateMachineCreator,
   StateMachine,
+  StateMachineCreator,
   TStateCreator,
-  TStateCreatosrWithState,
   TTransitions,
 } from "..";
-import { createMachine, createStates } from "..";
 
 export type UseTransitionEffectWithEvent<
   States extends Record<string, TStateCreator>,

@@ -8,7 +8,7 @@ type TStateCreatorWithState<State extends TStateCreators> = {
   ) => ReturnType<State[K]> & { state: K };
 };
 
-export type TStateCreatosrWithState<T extends TStateCreators> = Record<
+export type TStateCreatorsWithState<T extends TStateCreators> = Record<
   string,
   TStateCreatorWithState<T>
 >;
@@ -83,7 +83,7 @@ export type StateMachineCreator<
 export function createStates<State extends TStateCreators>(states: State) {
   const stateCreators = {} as TStateCreatorWithState<State>;
 
-  for (let state in states) {
+  for (const state in states) {
     // @ts-ignore
     stateCreators[state] = (...params) => ({
       ...states[state](...params),
@@ -106,8 +106,8 @@ export function createMachine<
     let currentState = initialState;
     const events = {} as ReturnType<StateMachineCreator<State, T>>["events"];
 
-    for (let state in transitions) {
-      for (let event in transitions[state]) {
+    for (const state in transitions) {
+      for (const event in transitions[state]) {
         // @ts-ignore
         events[event] = (...params) => {
           if (isDisposed) {
@@ -173,11 +173,9 @@ export function match<S extends IState, T extends TPartialMatch<S>, U>(
       [K in keyof T]: T[K] extends (...args: any[]) => infer R ? R : never;
     }[keyof T]
   | U;
-export function match() {
-  const state = arguments[0];
-  const matches = arguments[1];
-  const _ = arguments[2];
 
+// FIXME: type enhancement
+export function match(state: any, matches: any, _?: any) {
   if (_) {
     return (matches[state.state] || _)(state);
   }
@@ -191,9 +189,9 @@ export function matchProp<
     [K in keyof S]: keyof (S & { state: K });
   }[keyof S]
 >(state: S, prop: P): S extends Record<P, unknown> ? S : undefined;
-export function matchProp() {
-  const state = arguments[0];
-  const prop = arguments[1];
+
+// FIXME: type enhancement
+export function matchProp(state: any, prop: any) {
   // @ts-ignore
   return prop in state ? state : undefined;
 }

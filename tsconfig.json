@@ -17,4 +17,5 @@
     "strict": true
   },
   "exclude": ["node_modules", "cjs", "react"],
+  "include": ["src"]
 }

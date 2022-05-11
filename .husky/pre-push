@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+yarn eslint && yarn build
+# yarn eslint && yarn build && yarn test
+# yarn test has an issue about resolving module, changes to build system config for our dir is required
