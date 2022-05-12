@@ -1,6 +1,6 @@
 {
   "name": "timsy",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Agnostic functional state machine with epic type support",
   "keywords": [
@@ -32,11 +32,7 @@
   "module": "index.js",
   "types": "index.d.ts",
   "files": [
-    "cjs",
-    "react",
-    "index.js",
-    "index.js.map",
-    "index.d.ts"
+    "**"
   ],
   "scripts": {
     "prebuild": "yarn clean",
@@ -103,6 +99,17 @@
     "tslint-config-prettier": "^1.13.0",
     "tslint-plugin-prettier": "^2.0.0",
     "typescript": "^4.6.4"
+  },
+  "peerDependencies": {
+    "react": ">=16.8"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=12.7.0"
   },
   "publishConfig": {
     "access": "public"
