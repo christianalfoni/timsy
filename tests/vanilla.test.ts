@@ -1,4 +1,4 @@
-import { createMachine, createStates } from ".";
+import { createMachine, createStates } from "timsy";
 
 describe("states", () => {
   it("should instantiate states", () => {

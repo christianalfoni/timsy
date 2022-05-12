@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
-import { createMachine, createStates } from "..";
-import { useMachine } from ".";
+import { createMachine, createStates } from "timsy";
+import { useMachine } from "timsy/react";
 
 const states = createStates({
   FOO: () => ({}),

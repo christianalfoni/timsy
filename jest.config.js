@@ -2,17 +2,19 @@
 const semver = require("semver");
 
 module.exports = {
-  testEnvironmentOptions: {
-    url: "http://localhost",
+  collectCoverage: true,
+  collectCoverageFrom: ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
+  coverageDirectory: "./coverage/",
+  coverageReporters: ["json", "html", "text", "text-summary"],
+  globals: { "ts-jest": { tsconfig: { target: "es2018" } } },
+  moduleNameMapper: {
+    "^timsy$": "<rootDir>/src/index.ts",
+    "^timsy/(.*)$": "<rootDir>/src/$1.ts",
   },
+  modulePathIgnorePatterns: ["dist"],
   preset: "ts-jest",
-  modulePathIgnorePatterns: ["<rootDir>/cjs", "<rootDir>/react"],
-  collectCoverageFrom: ["src/**/*.{t,j}s?(x)", "!src/**/*.d.ts"],
-  globals: {
-    "ts-jest": {
-      tsconfig: {
-        target: "es2018",
-      },
-    },
-  },
+  rootDir: ".",
+  testEnvironment: "jsdom",
+  testEnvironmentOptions: { url: "http://localhost" },
+  testRegex: "test.(ts|tsx)$",
 };
