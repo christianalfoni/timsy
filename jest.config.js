@@ -3,10 +3,10 @@ const semver = require("semver");
 
 module.exports = {
   collectCoverage: true,
+  transform: { "^.+\\.(t|j)sx?$": "babel-jest" },
   collectCoverageFrom: ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
   coverageDirectory: "./coverage/",
   coverageReporters: ["json", "html", "text", "text-summary"],
-  globals: { "ts-jest": { tsconfig: { target: "es2018" } } },
   moduleNameMapper: {
     "^timsy$": "<rootDir>/src/index.ts",
     "^timsy/(.*)$": "<rootDir>/src/$1.ts",
