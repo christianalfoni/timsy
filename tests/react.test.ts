@@ -133,7 +133,7 @@ describe("hooks", () => {
 
     expect(hasRunBarEffect).toBe(true);
   });
-  it("should handle mulitple states with event effect", async () => {
+  it("should handle multiple states with event effect", async () => {
     let hasRunBarEffectCount = 0;
     const { result } = renderHook(() => {
       const testMachine = useMachine(machine, states.BAR());
