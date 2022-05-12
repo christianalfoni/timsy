@@ -1,6 +1,7 @@
 {
   "name": "timsy",
   "version": "1.0.0",
+  "private": true,
   "description": "Agnostic functional state machine with epic type support",
   "keywords": [
     "typescript",
@@ -13,11 +14,18 @@
   "license": "MIT",
   "author": "Christian Alfoni <christianalfoni@gmail.com>",
   "exports": {
+    "./package.json": "./package.json",
     ".": {
-      "import": "./index.js"
+      "types": "./index.d.ts",
+      "module": "./esm/index.js",
+      "import": "./esm/index.mjs",
+      "default": "./index.js"
     },
-    "./react": {
-      "import": "./react/index.js"
+    "./vanilla": {
+      "types": "./vanilla.d.ts",
+      "module": "./esm/vanilla.js",
+      "import": "./esm/vanilla.mjs",
+      "default": "./vanilla.js"
     }
   },
   "main": "index.js",
@@ -31,11 +39,16 @@
     "index.d.ts"
   ],
   "scripts": {
-    "prebuild": "yarn typecheck && yarn clean",
+    "prebuild": "yarn clean",
     "build": "concurrently -m 8 'yarn:build:*'",
+    "postbuild": "yarn copy",
     "build:base": "rollup -c",
     "build:vanilla": "rollup -c --config-vanilla",
     "clean": "shx rm -rf dist coverage",
+    "precopy": "shx cp -r dist/src/* dist/esm && shx cp -r dist/src/* dist && shx rm -rf dist/src && shx rm -rf dist/{src,tests}",
+    "copy": "concurrently -m 8 'yarn:copy:*'",
+    "copy:package-json": "shx cp package.json dist && json -I -f dist/package.json -e 'this.private=false; this.devDependencies=undefined; this.scripts=undefined; this.publishConfig=undefined'",
+    "copy:static-content": "shx cp README.md LICENSE dist",
     "eslint": "eslint --fix '*.json' 'src/**/*.{ts,tsx}'",
     "format": "prettier '**/*.{md,js,jsx,json,ts,tsx}' --write",
     "prepare": "husky install",
@@ -72,6 +85,7 @@
     "husky": "^8.0.0",
     "jest": "^28.1.0",
     "jest-environment-jsdom": "^28.1.0",
+    "json": "^11.0.0",
     "lint-staged": "^12.4.1",
     "pascal-case": "^2.0.1",
     "prettier": "2.6.2",
@@ -89,5 +103,8 @@
     "tslint-config-prettier": "^1.13.0",
     "tslint-plugin-prettier": "^2.0.0",
     "typescript": "^4.6.4"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
