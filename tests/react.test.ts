@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
-import { createMachine, createStates } from "..";
-import { useMachine } from ".";
+import { createMachine, createStates } from "timsy";
+import { useMachine } from "timsy/react";
 
 const states = createStates({
   FOO: () => ({}),
@@ -133,7 +133,7 @@ describe("hooks", () => {
 
     expect(hasRunBarEffect).toBe(true);
   });
-  it("should handle mulitple states with event effect", async () => {
+  it("should handle multiple states with event effect", async () => {
     let hasRunBarEffectCount = 0;
     const { result } = renderHook(() => {
       const testMachine = useMachine(machine, states.BAR());

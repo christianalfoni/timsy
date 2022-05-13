@@ -1,6 +1,7 @@
 {
   "name": "timsy",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "private": true,
   "description": "Agnostic functional state machine with epic type support",
   "keywords": [
     "typescript",
@@ -13,41 +14,66 @@
   "license": "MIT",
   "author": "Christian Alfoni <christianalfoni@gmail.com>",
   "exports": {
+    "./package.json": "./package.json",
     ".": {
-      "import": "./index.js"
+      "types": "./index.d.ts",
+      "module": "./esm/index.js",
+      "import": "./esm/index.mjs",
+      "default": "./index.js"
     },
-    "./react": {
-      "import": "./react/index.js"
+    "./core": {
+      "types": "./core.d.ts",
+      "module": "./esm/core.js",
+      "import": "./esm/core.mjs",
+      "default": "./core.js"
     }
   },
   "main": "index.js",
   "module": "index.js",
   "types": "index.d.ts",
   "files": [
-    "cjs",
-    "react",
-    "index.js",
-    "index.js.map",
-    "index.d.ts"
+    "**"
   ],
   "scripts": {
-    "prebuild": "yarn typecheck && yarn clean",
-    "build": "tsc --outDir . --module esnext && tsc --outDir cjs --module commonjs",
-    "clean": "rimraf cjs react/*.ts react/*.js react/*.map index.d.ts index.test.d.ts",
+    "prebuild": "yarn clean",
+    "build": "concurrently -m 8 'yarn:build:*'",
+    "postbuild": "yarn copy",
+    "build:base": "rollup -c",
+    "build:core": "rollup -c --config-core",
+    "clean": "shx rm -rf dist coverage",
+    "precopy": "shx cp -r dist/src/* dist/esm && shx cp -r dist/src/* dist && shx rm -rf dist/src && shx rm -rf dist/{src,tests}",
+    "copy": "concurrently -m 8 'yarn:copy:*'",
+    "copy:package-json": "shx cp package.json dist && json -I -f dist/package.json -e 'this.private=false; this.devDependencies=undefined; this.scripts=undefined; this.publishConfig=undefined'",
+    "copy:static-content": "shx cp README.md LICENSE dist",
     "eslint": "eslint --fix '*.json' 'src/**/*.{ts,tsx}'",
     "format": "prettier '**/*.{md,js,jsx,json,ts,tsx}' --write",
     "prepare": "husky install",
     "prepublish": "yarn build",
-    "test": "jest --env=jsdom",
+    "pretest": "yarn typecheck",
+    "test": "jest",
+    "test:ci": "jest",
+    "test:coverage:watch": "jest --watch",
+    "test:dev": "jest --watch --no-coverage",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@babel/core": "^7.17.10",
+    "@babel/preset-env": "^7.17.10",
+    "@babel/preset-react": "^7.16.7",
+    "@babel/preset-typescript": "^7.16.7",
+    "@rollup/plugin-alias": "^3.1.9",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-typescript": "^8.3.2",
     "@testing-library/react": "^13.2.0",
     "@types/jest": "^23.0.0",
     "@types/node": "^8.0.0",
     "@typescript-eslint/eslint-plugin": "^5.23.0",
     "@typescript-eslint/parser": "^5.23.0",
+    "babel-jest": "^28.1.0",
+    "concurrently": "^7.1.0",
     "dts-bundle": "^0.7.2",
+    "esbuild": "^0.14.39",
     "eslint": "^8.15.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jest": "^26.1.5",
@@ -55,13 +81,17 @@
     "husky": "^8.0.0",
     "jest": "^28.1.0",
     "jest-environment-jsdom": "^28.1.0",
+    "json": "^11.0.0",
     "lint-staged": "^12.4.1",
     "pascal-case": "^2.0.1",
     "prettier": "2.6.2",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
-    "rimraf": "^2.6.1",
+    "rollup": "^2.72.1",
+    "rollup-plugin-esbuild": "^4.9.1",
+    "rollup-plugin-terser": "^7.0.2",
     "semver": "^6.3.0",
+    "shx": "^0.3.4",
     "sort-package-json": "^1.57.0",
     "ts-jest": "~28.0.1",
     "tslib": "^2.1.0",
@@ -69,5 +99,19 @@
     "tslint-config-prettier": "^1.13.0",
     "tslint-plugin-prettier": "^2.0.0",
     "typescript": "^4.6.4"
+  },
+  "peerDependencies": {
+    "react": ">=16.8"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=12.7.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

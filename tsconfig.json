@@ -1,21 +1,24 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "rootDir": "src",
-    "outDir": ".code",
-    "lib": ["dom", "es2018"],
-    "jsx": "react",
-    "moduleResolution": "node",
-    "skipLibCheck": true,
-    "importHelpers": true,
+    "baseUrl": ".",
     "declaration": true,
-    "pretty": true,
-    "sourceMap": true,
-    "inlineSources": true,
     "esModuleInterop": true,
+    "importHelpers": true,
+    "jsx": "react",
+    "lib": ["dom", "es2018"],
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "paths": {
+      "timsy": ["./src/index.ts"],
+      "timsy/*": ["./src/*.ts"]
+    },
+    "pretty": true,
     "resolveJsonModule": true,
-    "strict": true
+    "skipLibCheck": true,
+    "sourceMap": false,
+    "strict": true,
+    "target": "ESNext"
   },
-  "exclude": ["node_modules", "cjs", "react"],
-  "include": ["src"]
+  "exclude": ["node_modules", "dist"],
+  "include": ["src", "tests"]
 }
