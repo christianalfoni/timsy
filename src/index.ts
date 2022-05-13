@@ -1,2 +1,2 @@
-export * from "./vanilla";
+export * from "./core";
 export * from "./react";

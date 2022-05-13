@@ -4,7 +4,7 @@ import {
   StateMachineCreator,
   TStateCreator,
   TTransitions,
-} from "./vanilla";
+} from "./core";
 
 export type UseTransitionEffectWithEvent<
   States extends Record<string, TStateCreator>,

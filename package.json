@@ -21,11 +21,11 @@
       "import": "./esm/index.mjs",
       "default": "./index.js"
     },
-    "./vanilla": {
-      "types": "./vanilla.d.ts",
-      "module": "./esm/vanilla.js",
-      "import": "./esm/vanilla.mjs",
-      "default": "./vanilla.js"
+    "./core": {
+      "types": "./core.d.ts",
+      "module": "./esm/core.js",
+      "import": "./esm/core.mjs",
+      "default": "./core.js"
     }
   },
   "main": "index.js",
@@ -39,7 +39,7 @@
     "build": "concurrently -m 8 'yarn:build:*'",
     "postbuild": "yarn copy",
     "build:base": "rollup -c",
-    "build:vanilla": "rollup -c --config-vanilla",
+    "build:core": "rollup -c --config-core",
     "clean": "shx rm -rf dist coverage",
     "precopy": "shx cp -r dist/src/* dist/esm && shx cp -r dist/src/* dist && shx rm -rf dist/src && shx rm -rf dist/{src,tests}",
     "copy": "concurrently -m 8 'yarn:copy:*'",

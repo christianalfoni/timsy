@@ -1,13 +1,14 @@
+import path from "path";
 import babel from "@rollup/plugin-babel";
 import resolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
-import path from "path";
 import esbuild from "rollup-plugin-esbuild";
 import { terser } from "rollup-plugin-terser";
-
+// eslint-disable-next-line @typescript-eslint/no-var-requires, no-undef
 const createBabelConfig = require("./babel.config");
 
 const extensions = [".ts", ".tsx"];
+// eslint-disable-next-line no-undef
 const { root } = path.parse(process.cwd());
 
 const external = (id) => !id.startsWith(".") && !id.startsWith(root);
@@ -93,7 +94,6 @@ export default function (args) {
     c = "index";
   }
 
-  console.log({ args });
   return [
     ...(c === "index" ? [createDeclarationConfig(`src/${c}.ts`, "dist")] : []),
     createCommonJSConfig(`src/${c}.ts`, `dist/${c}`),
