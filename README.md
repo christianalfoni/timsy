@@ -29,3 +29,14 @@ const currentState = machine.getState()
 
 const dispose = machine.subscribe((state, event, prevState) => {})
 ```
+
+## Publish
+
+```ssh
+yarn build
+cd dist
+# If you need to double-check what will be in the final publish package
+npx npm-packlist
+# publish via np or npm itself
+npm publish
+```

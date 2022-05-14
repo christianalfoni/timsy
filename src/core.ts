@@ -195,3 +195,32 @@ export function matchProp(state: any, prop: any) {
   // @ts-ignore
   return prop in state ? state : undefined;
 }
+
+export type PickState<S extends IState, T extends S["state"] = never> = [
+  T
+] extends [never]
+  ? S
+  : S extends { state: T }
+  ? S
+  : never;
+
+export type States<T extends Record<string, (...params: any[]) => IState>> = {
+  [K in keyof T]: ReturnType<T[K]>;
+}[keyof T];
+
+export const pickEvents = <
+  T extends Record<string, IEvent>,
+  TA extends (keyof T)[]
+>(
+  obj: T,
+  ...keys: TA
+): Pick<T, TA[number]> => {
+  return Object.keys(obj)
+    .filter((key) => keys.includes(key as keyof T))
+    .reduce((aggr, key) => {
+      // @ts-ignore
+      aggr[key] = obj[key];
+
+      return aggr;
+    }, {} as any);
+};
