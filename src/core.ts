@@ -367,7 +367,7 @@ export type States<T extends Record<string, (...params: any[]) => IState>> = {
 }[keyof T];
 
 export const pickEvents = <
-  T extends Record<string, IEvent>,
+  T extends Record<string, (...params: any[]) => void>,
   TA extends (keyof T)[]
 >(
   obj: T,
