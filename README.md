@@ -5,14 +5,14 @@ Agnostic functional state machine with epic type support
 ## Example
 
 ```ts
-import { createStates, createMachine } from "timsy"
+import { createStates } from "timsy"
 
-const states = createStates({
+const [states, createMachine] = createStates({
   FOO: () => ({}),
   BAR: () => ({}),
 })
 
-const spawn = createMachine(states, {
+const runMachine = createMachine(states, {
   FOO: {
     SWITCH: () => () => states.BAR(),
   },
@@ -21,13 +21,61 @@ const spawn = createMachine(states, {
   },
 })
 
-const machine = spawn(states.FOO())
+const machine = runMachine(states.FOO())
 
 machine.events.SWITCH()
 
 const currentState = machine.getState()
 
 const dispose = machine.subscribe((state, event, prevState) => {})
+
+const dispose = machine.subscribeTransition("FOO", (state) => {
+  // When entering state
+  return () => {
+    // When exiting state
+  }
+})
+
+const dispose = machine.subscribeTransition(["FOO", "BAR"], (state) => {
+  // When first entering either state
+  return () => {
+    // When exiting to other state
+  }
+})
+
+const dispose = machine.subscribeTransition(
+  "FOO",
+  "SWITCH",
+  (state, eventParams) => {
+    // When entering state by event
+  }
+)
+
+const dispose = machine.subscribeTransition(
+  ["FOO", "BAR"],
+  "SWITCH",
+  (state, eventParams) => {
+    // When entering either state by event
+  }
+)
+
+const dispose = machine.subscribeTransition(
+  "FOO",
+  "SWITCH",
+  "BAR",
+  (state, eventParams, prevState) => {
+    // When entering state by event from state
+  }
+)
+
+const dispose = machine.subscribeTransition(
+  ["FOO", "BAR"],
+  "SWITCH",
+  "BAZ"
+  (state, eventParams, prevState) => {
+    // When entering either state by event from state
+  }
+)
 ```
 
 ## Publish
