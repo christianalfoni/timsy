@@ -178,12 +178,11 @@ function createMachine<
   State extends TStateCreators,
   T extends TTransitions<State>
 >(transitions: T): StateMachineCreator<State, T> {
-  let isDisposed = false;
-
-  const subscribers: Subscriber<State, T>[] = [];
-
   return (initialState) => {
+    let isDisposed = false;
     let currentState = initialState;
+
+    const subscribers: Subscriber<State, T>[] = [];
     const events = {} as ReturnType<StateMachineCreator<State, T>>["events"];
 
     for (const state in transitions) {
