@@ -130,7 +130,7 @@ describe("transitions", () => {
       },
     })(states.FOO());
 
-    machine.subscribeTransition("FOO", () => {
+    machine.subscribe("FOO", () => {
       expect(true).toBe(true);
     });
   });
@@ -152,7 +152,7 @@ describe("transitions", () => {
 
     machine.events.SWITCH();
 
-    machine.subscribeTransition("BAR", () => {
+    machine.subscribe("BAR", () => {
       expect(true).toBe(true);
     });
   });
@@ -172,7 +172,7 @@ describe("transitions", () => {
       },
     })(states.FOO());
 
-    machine.subscribeTransition(["FOO", "BAR"], () => {
+    machine.subscribe(["FOO", "BAR"], () => {
       expect(true).toBe(true);
     });
 
@@ -194,7 +194,7 @@ describe("transitions", () => {
       },
     })(states.FOO());
 
-    machine.subscribeTransition("BAR", "SWITCH", () => {
+    machine.subscribe("BAR", "SWITCH", () => {
       expect(true).toBe(true);
     });
 
@@ -216,16 +216,11 @@ describe("transitions", () => {
       },
     })(states.FOO());
 
-    machine.subscribeTransition(
-      "BAR",
-      "SWITCH",
-      "FOO",
-      (state, params, prevState) => {
-        expect(state).toEqual({ state: "BAR" });
-        expect(params).toEqual([]);
-        expect(prevState).toEqual({ state: "FOO" });
-      }
-    );
+    machine.subscribe("BAR", "SWITCH", "FOO", (state, params, prevState) => {
+      expect(state).toEqual({ state: "BAR" });
+      expect(params).toEqual([]);
+      expect(prevState).toEqual({ state: "FOO" });
+    });
 
     machine.events.SWITCH();
   });

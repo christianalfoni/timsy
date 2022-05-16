@@ -27,23 +27,25 @@ machine.events.SWITCH()
 
 const currentState = machine.getState()
 
-const dispose = machine.subscribe((state, event, prevState) => {})
+const dispose = machine.subscribe((state, event, prevState) => {
+  // Any change
+})
 
-const dispose = machine.subscribeTransition("FOO", (state) => {
+const dispose = machine.subscribe("FOO", (state) => {
   // When entering state
   return () => {
     // When exiting state
   }
 })
 
-const dispose = machine.subscribeTransition(["FOO", "BAR"], (state) => {
+const dispose = machine.subscribe(["FOO", "BAR"], (state) => {
   // When first entering either state
   return () => {
     // When exiting to other state
   }
 })
 
-const dispose = machine.subscribeTransition(
+const dispose = machine.subscribe(
   "FOO",
   "SWITCH",
   (state, eventParams) => {
@@ -51,7 +53,7 @@ const dispose = machine.subscribeTransition(
   }
 )
 
-const dispose = machine.subscribeTransition(
+const dispose = machine.subscribe(
   ["FOO", "BAR"],
   "SWITCH",
   (state, eventParams) => {
@@ -59,7 +61,7 @@ const dispose = machine.subscribeTransition(
   }
 )
 
-const dispose = machine.subscribeTransition(
+const dispose = machine.subscribe(
   "FOO",
   "SWITCH",
   "BAR",
@@ -68,7 +70,7 @@ const dispose = machine.subscribeTransition(
   }
 )
 
-const dispose = machine.subscribeTransition(
+const dispose = machine.subscribe(
   ["FOO", "BAR"],
   "SWITCH",
   "BAZ"

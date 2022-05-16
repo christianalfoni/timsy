@@ -41,7 +41,7 @@ describe("hooks", () => {
     let reconcileCount = 0;
     const { result } = renderHook(() => {
       reconcileCount++;
-      return useMachine(machine(states.FOO()));
+      return useMachine(() => machine(states.FOO()), []);
     });
 
     expect(result.current[0]).toEqual({ state: "FOO" });
@@ -55,7 +55,7 @@ describe("hooks", () => {
   it("should trigger effect when transitioning into initial state", async () => {
     expect.assertions(1);
     renderHook(() => {
-      const testMachine = useMachine(machine(states.FOO()));
+      const testMachine = useMachine(() => machine(states.FOO()), []);
       const [, , useTransitionEffect] = testMachine;
 
       useTransitionEffect("FOO", () => {
@@ -69,7 +69,7 @@ describe("hooks", () => {
     let hasDisposedFooEffect = false;
     let hasRunBarEffect = false;
     const { result } = renderHook(() => {
-      const testMachine = useMachine(machine(states.FOO()));
+      const testMachine = useMachine(() => machine(states.FOO()), []);
       const [, , useTransitionEffect] = testMachine;
 
       useTransitionEffect("FOO", () => () => {
@@ -93,7 +93,7 @@ describe("hooks", () => {
     let hasDisposedFooBarEffect = false;
     let hasRunFooBarEffect = false;
     const { result } = renderHook(() => {
-      const testMachine = useMachine(machine(states.FOO()));
+      const testMachine = useMachine(() => machine(states.FOO()), []);
       const [, , useTransitionEffect] = testMachine;
 
       useTransitionEffect(["FOO", "BAR"], () => {
@@ -117,7 +117,7 @@ describe("hooks", () => {
   it("should handle state with event effect", async () => {
     let hasRunBarEffect = false;
     const { result } = renderHook(() => {
-      const testMachine = useMachine(machine(states.FOO()));
+      const testMachine = useMachine(() => machine(states.FOO()), []);
       const [, , useTransitionEffect] = testMachine;
 
       useTransitionEffect("BAR", "SWITCH", () => {
@@ -136,7 +136,7 @@ describe("hooks", () => {
   it("should handle multiple states with event effect", async () => {
     let hasRunBarEffectCount = 0;
     const { result } = renderHook(() => {
-      const testMachine = useMachine(machine(states.BAR()));
+      const testMachine = useMachine(() => machine(states.BAR()), []);
       const [, , useTransitionEffect] = testMachine;
 
       useTransitionEffect(["FOO", "BAR"], "SWITCH", () => {

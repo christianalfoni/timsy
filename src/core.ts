@@ -99,6 +99,11 @@ type SubscribeTransition<States extends Record<string, TStateCreator>> = <
   ) => void | (() => void)
 ) => void;
 
+export type Subscribe<
+  State extends TStateCreators,
+  T extends TTransitions<State>
+> = (cb: Subscriber<State, T>) => void;
+
 export type Subscriber<
   State extends TStateCreators,
   T extends TTransitions<State>
@@ -140,8 +145,8 @@ export type StateMachine<
   getState(): {
     [S in keyof State]: ReturnType<TStateCreatorWithState<State>[S]>;
   }[keyof State];
-  subscribe: (subscriber: Subscriber<State, T>) => () => void;
-  subscribeTransition: SubscribeTransition<State> &
+  subscribe: Subscribe<State, T> &
+    SubscribeTransition<State> &
     SubsribeTransitionWithEvent<State, T> &
     SubscribeTransitionWithEventAndFrom<State, T>;
 };
@@ -226,12 +231,15 @@ function createMachine<
       getState() {
         return currentState;
       },
-      subscribe,
-      subscribeTransition(...params: any[]) {
+      subscribe(...params: any[]) {
         const state = params[0];
         const eventType = params[1];
         const from = params[2];
         const cb = params[3] || params[2] || params[1];
+
+        if (typeof state === "function") {
+          return subscribe(state);
+        }
 
         if (typeof from === "string") {
           subscribe((currentState, event, prevState) => {
