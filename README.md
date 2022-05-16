@@ -12,7 +12,7 @@ const [states, createMachine] = createStates({
   BAR: () => ({}),
 })
 
-const runMachine = createMachine(states, {
+const runMachine = createMachine({
   FOO: {
     switch: () => () => states.BAR(),
   },
