@@ -14,16 +14,16 @@ const [states, createMachine] = createStates({
 
 const runMachine = createMachine(states, {
   FOO: {
-    SWITCH: () => () => states.BAR(),
+    switch: () => () => states.BAR(),
   },
   BAR: {
-    SWITCH: () => () => states.FOO(),
+    switch: () => () => states.FOO(),
   },
 })
 
 const machine = runMachine(states.FOO())
 
-machine.events.SWITCH()
+machine.events.switch()
 
 const currentState = machine.getState()
 
@@ -47,7 +47,7 @@ const dispose = machine.subscribe(["FOO", "BAR"], (state) => {
 
 const dispose = machine.subscribe(
   "FOO",
-  "SWITCH",
+  "switch",
   (state, eventParams) => {
     // When entering state by event
   }
@@ -55,7 +55,7 @@ const dispose = machine.subscribe(
 
 const dispose = machine.subscribe(
   ["FOO", "BAR"],
-  "SWITCH",
+  "switch",
   (state, eventParams) => {
     // When entering either state by event
   }
@@ -63,7 +63,7 @@ const dispose = machine.subscribe(
 
 const dispose = machine.subscribe(
   "FOO",
-  "SWITCH",
+  "switch",
   "BAR",
   (state, eventParams, prevState) => {
     // When entering state by event from state
@@ -72,7 +72,7 @@ const dispose = machine.subscribe(
 
 const dispose = machine.subscribe(
   ["FOO", "BAR"],
-  "SWITCH",
+  "switch",
   "BAZ"
   (state, eventParams, prevState) => {
     // When entering either state by event from state
