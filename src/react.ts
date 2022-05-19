@@ -21,15 +21,16 @@ export function useMachine<T extends StateMachine<any, any>>(
   }
 
   const [state, setState] = React.useState(machine.getState());
-  const useTransitionEffect = React.useMemo(
+  const useSubscribe = React.useMemo(
     () =>
       (...params: any[]) =>
         // @ts-ignore
-        React.useEffect(() => machine.subscribe(...params), []),
+        React.useEffect(() => machine.subscribe(...params), [machine]),
     [machine]
   );
 
   React.useEffect(() => machine.subscribe(setState), [machine]);
+  React.useEffect(() => setState(() => machine.getState()), [machine]);
 
-  return [state, machine.events, useTransitionEffect] as any;
+  return [state, machine.events, useSubscribe] as any;
 }
