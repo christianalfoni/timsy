@@ -24,25 +24,15 @@ export function useMachine<T extends StateMachine<any, any>>(
     () =>
       (...params: any[]) => {
         // Support for React 18
-        const subscriptionRef = React.useRef<{
-          dispose: () => void;
-          machine: T;
-        } | null>(null);
+        const subscriptionRef = React.useRef<T | null>(null);
 
         React.useEffect(() => {
-          if (
-            !subscriptionRef.current ||
-            subscriptionRef.current.machine !== machine
-          ) {
-            subscriptionRef.current?.dispose();
-            subscriptionRef.current = {
-              // @ts-ignore
-              dispose: machine.subscribe(...params),
-              machine,
-            };
+          if (!subscriptionRef.current || subscriptionRef.current !== machine) {
+            // @ts-ignore
+            return machine.subscribe(...params);
           }
 
-          return subscriptionRef.current.dispose;
+          return;
         }, [machine]);
       },
     [machine]
