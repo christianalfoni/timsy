@@ -20,17 +20,37 @@ export function useMachine<T extends StateMachine<any, any>>(
     machine = passedMachine;
   }
 
-  const [state, setState] = React.useState(machine.getState());
   const useSubscribe = React.useMemo(
     () =>
-      (...params: any[]) =>
-        // @ts-ignore
-        React.useEffect(() => machine.subscribe(...params), [machine]),
+      (...params: any[]) => {
+        // Support for React 18
+        const subscriptionRef = React.useRef<{
+          dispose: () => void;
+          machine: T;
+        } | null>(null);
+
+        React.useEffect(() => {
+          if (
+            !subscriptionRef.current ||
+            subscriptionRef.current.machine !== machine
+          ) {
+            subscriptionRef.current?.dispose();
+            subscriptionRef.current = {
+              // @ts-ignore
+              dispose: machine.subscribe(...params),
+              machine,
+            };
+          }
+
+          return subscriptionRef.current.dispose;
+        }, [machine]);
+      },
     [machine]
   );
 
-  React.useEffect(() => machine.subscribe(setState), [machine]);
-  React.useEffect(() => setState(() => machine.getState()), [machine]);
-
-  return [state, machine.events, useSubscribe] as any;
+  return [
+    React.useSyncExternalStore(machine.subscribe, machine.getState),
+    machine.events,
+    useSubscribe,
+  ] as any;
 }
