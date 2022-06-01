@@ -57,7 +57,7 @@ export type SubscribeTransitionWithEventAndFrom<
       : never,
     prevState: SF extends keyof States ? ReturnType<States[SF]> : never
   ) => void
-) => void;
+) => () => void;
 
 export type SubsribeTransitionWithEvent<
   States extends Record<string, TStateCreator>,
@@ -84,7 +84,7 @@ export type SubsribeTransitionWithEvent<
       ? Parameters<T[SS][EE]>
       : never
   ) => void
-) => void;
+) => () => void;
 
 type SubscribeTransition<States extends Record<string, TStateCreator>> = <
   SS extends keyof States | (keyof States)[]
@@ -97,12 +97,12 @@ type SubscribeTransition<States extends Record<string, TStateCreator>> = <
       ? ReturnType<States[SS]>
       : never
   ) => void | (() => void)
-) => void;
+) => () => void;
 
 export type Subscribe<
   State extends TStateCreators,
   T extends TTransitions<State>
-> = (cb: Subscriber<State, T>) => void;
+> = (cb: Subscriber<State, T>) => () => void;
 
 export type Subscriber<
   State extends TStateCreators,
@@ -242,7 +242,7 @@ function createMachine<
         }
 
         if (typeof from === "string") {
-          subscribe((currentState, event, prevState) => {
+          return subscribe((currentState, event, prevState) => {
             const isState = Array.isArray(state)
               ? state.includes(currentState.state)
               : currentState.state === state;
@@ -255,7 +255,7 @@ function createMachine<
             }
           });
         } else if (typeof eventType === "string") {
-          subscribe((currentState, event) => {
+          return subscribe((currentState, event) => {
             const isState = Array.isArray(state)
               ? state.includes(currentState.state)
               : currentState.state === state;

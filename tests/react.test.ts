@@ -27,7 +27,9 @@ describe("hooks", () => {
     expect(result.current[0]).toEqual({ state: "FOO" });
   });
   it("should update hook state when machine changes state", async () => {
-    const { result } = renderHook(() => useMachine(machine(states.FOO())));
+    const { result } = renderHook(() =>
+      useMachine(() => machine(states.FOO()), [])
+    );
 
     expect(result.current[0]).toEqual({ state: "FOO" });
 
