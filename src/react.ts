@@ -3,7 +3,7 @@ import { StateMachine } from "./core";
 
 export function useMachine<T extends StateMachine<any, any>>(
   constructMachine: () => T,
-  deps: unknown[]
+  deps?: unknown[]
 ): [ReturnType<T["getState"]>, T["events"], T["subscribe"]];
 export function useMachine<T extends StateMachine<any, any>>(
   passedMachine: T
@@ -15,7 +15,7 @@ export function useMachine<T extends StateMachine<any, any>>(
   let machine: T;
 
   if (typeof passedMachine === "function") {
-    machine = React.useMemo(() => passedMachine(), deps);
+    machine = React.useMemo(() => passedMachine(), deps || []);
   } else {
     machine = passedMachine;
   }
