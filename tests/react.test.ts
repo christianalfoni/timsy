@@ -1,6 +1,6 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { createStates } from "timsy";
-import { useMachine } from "timsy/react";
+import { useMachine, usePromise } from "timsy/react";
 
 const [states, createMachine] = createStates({
   FOO: () => ({}),
@@ -58,9 +58,9 @@ describe("hooks", () => {
     expect.assertions(1);
     renderHook(() => {
       const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , useTransitionEffect] = testMachine;
+      const [, , useSubscribe] = testMachine;
 
-      useTransitionEffect("FOO", () => {
+      useSubscribe("FOO", () => {
         expect(true).toBe(true);
       });
 
@@ -72,12 +72,12 @@ describe("hooks", () => {
     let hasRunBarEffect = false;
     const { result } = renderHook(() => {
       const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , useTransitionEffect] = testMachine;
+      const [, , useSubscribe] = testMachine;
 
-      useTransitionEffect("FOO", () => () => {
+      useSubscribe("FOO", () => () => {
         hasDisposedFooEffect = true;
       });
-      useTransitionEffect("BAR", () => {
+      useSubscribe("BAR", () => {
         hasRunBarEffect = true;
       });
 
@@ -96,9 +96,9 @@ describe("hooks", () => {
     let hasRunFooBarEffect = false;
     const { result } = renderHook(() => {
       const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , useTransitionEffect] = testMachine;
+      const [, , useSubscribe] = testMachine;
 
-      useTransitionEffect(["FOO", "BAR"], () => {
+      useSubscribe(["FOO", "BAR"], () => {
         hasRunFooBarEffect = true;
         return () => {
           hasDisposedFooBarEffect = true;
@@ -120,9 +120,9 @@ describe("hooks", () => {
     let hasRunBarEffect = false;
     const { result } = renderHook(() => {
       const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , useTransitionEffect] = testMachine;
+      const [, , useSubscribe] = testMachine;
 
-      useTransitionEffect("BAR", "SWITCH", () => {
+      useSubscribe("BAR", "SWITCH", () => {
         hasRunBarEffect = true;
       });
 
@@ -136,30 +136,58 @@ describe("hooks", () => {
     expect(hasRunBarEffect).toBe(true);
   });
   it("should handle multiple states with event effect", async () => {
-    let hasRunBarEffectCount = 0;
+    let runBarEffectCount = 0;
     const { result } = renderHook(() => {
       const testMachine = useMachine(() => machine(states.BAR()), []);
-      const [, , useTransitionEffect] = testMachine;
+      const [, , useSubscribe] = testMachine;
 
-      useTransitionEffect(["FOO", "BAR"], "SWITCH", () => {
-        hasRunBarEffectCount++;
+      useSubscribe(["FOO", "BAR"], "SWITCH", () => {
+        runBarEffectCount++;
       });
 
       return testMachine;
     });
 
-    expect(hasRunBarEffectCount).toBe(0);
+    expect(runBarEffectCount).toBe(0);
 
     act(() => {
       result.current[1].SWITCH();
     });
 
-    expect(hasRunBarEffectCount).toBe(1);
+    expect(runBarEffectCount).toBe(1);
 
     act(() => {
       result.current[1].SWITCH();
     });
 
-    expect(hasRunBarEffectCount).toBe(2);
+    expect(runBarEffectCount).toBe(2);
+  });
+  it("should resolve promises", async () => {
+    let runResolvedEffectCount = 0;
+    const { result } = renderHook(() => {
+      const testMachine = usePromise(async (name: string) => `hello ${name}`);
+      const [, , useSubscribe] = testMachine;
+
+      useSubscribe("RESOLVED", () => {
+        runResolvedEffectCount++;
+      });
+
+      return testMachine;
+    });
+
+    expect(runResolvedEffectCount).toBe(0);
+
+    act(() => {
+      result.current[1]("Christian");
+    });
+
+    await waitFor(() => {
+      expect(runResolvedEffectCount).toBe(1);
+
+      expect(result.current[0]).toEqual({
+        state: "RESOLVED",
+        value: "hello Christian",
+      });
+    });
   });
 });

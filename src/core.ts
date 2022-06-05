@@ -24,7 +24,7 @@ export interface IEvent {
 export type TTransitions<T extends TStateCreators> = {
   [S in keyof T]: {
     [event: string]: (
-      ...params: any[]
+      ...params: any
     ) => (state: { state: S } & ReturnType<T[S]>) => ReturnType<T[keyof T]>;
   };
 };

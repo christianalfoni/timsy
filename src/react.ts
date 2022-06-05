@@ -1,5 +1,5 @@
 import * as React from "react";
-import { StateMachine } from "./core";
+import { PickState, StateMachine, createStates } from "./core";
 
 export function useMachine<T extends StateMachine<any, any>>(
   constructMachine: () => T,
@@ -35,3 +35,69 @@ export function useMachine<T extends StateMachine<any, any>>(
     useSubscribe,
   ] as any;
 }
+
+type PromiseCallback = (...params: any[]) => Promise<any>;
+
+let cachedMachine: any;
+
+function createPromiseMachine<T extends PromiseCallback>() {
+  function createMachine() {
+    const [states, createMachine] = createStates({
+      IDLE: () => ({}),
+      PENDING: (params: Parameters<T>) => ({ params }),
+      RESOLVED: (value: Awaited<ReturnType<T>>) => ({ value }),
+      REJECTED: (error: unknown) => ({ error }),
+    });
+
+    return createMachine({
+      IDLE: {
+        execute:
+          (...params: Parameters<T>) =>
+          () =>
+            states.PENDING(params),
+      },
+      PENDING: {
+        resolve: (value: Awaited<ReturnType<T>>) => () =>
+          states.RESOLVED(value),
+        reject: (error: unknown) => () => states.REJECTED(error),
+      },
+      RESOLVED: {
+        execute:
+          (...params: Parameters<T>) =>
+          () =>
+            states.PENDING(params),
+      },
+      REJECTED: {
+        execute:
+          (...params: Parameters<T>) =>
+          () =>
+            states.PENDING(params),
+      },
+    });
+  }
+
+  return (
+    cachedMachine ? cachedMachine : (cachedMachine = createMachine())
+  ) as ReturnType<typeof createMachine>;
+}
+
+export const usePromise = <T extends PromiseCallback>(
+  cb: T,
+  deps: unknown[] = []
+) => {
+  const [state, events, useSubscribe] = useMachine(
+    () =>
+      createPromiseMachine<T>()({
+        state: "IDLE",
+      }),
+    deps
+  );
+
+  useSubscribe("PENDING", ({ params }) => {
+    cb(...params)
+      .then(events.resolve)
+      .catch(events.reject);
+  });
+
+  return [state, events.execute, useSubscribe] as const;
+};
