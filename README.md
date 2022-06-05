@@ -118,7 +118,7 @@ const DataComponent: React.FC = () => {
     fetch("/data").then((response) => response.json())
   )
 
-  useTransitionEffect("RESOLVED", (data) => {
+  useTransitionEffect("RESOLVED", ({ value }) => {
     // Pass resolved data into other state stores or react
     // to transitions
   })
