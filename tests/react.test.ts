@@ -122,7 +122,7 @@ describe("hooks", () => {
       const testMachine = useMachine(() => machine(states.FOO()), []);
       const [, , useSubscribe] = testMachine;
 
-      useSubscribe("BAR", "SWITCH", () => {
+      useSubscribe("FOO => SWITCH => BAR", () => {
         hasRunBarEffect = true;
       });
 
@@ -141,7 +141,7 @@ describe("hooks", () => {
       const testMachine = useMachine(() => machine(states.BAR()), []);
       const [, , useSubscribe] = testMachine;
 
-      useSubscribe(["FOO", "BAR"], "SWITCH", () => {
+      useSubscribe(["FOO => SWITCH => BAR", "BAR => SWITCH => FOO"], () => {
         runBarEffectCount++;
       });
 

@@ -104,10 +104,10 @@ describe("machine", () => {
       },
     });
     const testMachine = spawn(states.FOO());
-    testMachine.subscribe((state, event, oldState) => {
-      expect(state).toEqual({ state: "BAR" });
+    testMachine.subscribe((prev, event, current) => {
+      expect(prev).toEqual({ state: "FOO" });
       expect(event).toEqual({ type: "SWITCH", params: [] });
-      expect(oldState).toEqual({ state: "FOO" });
+      expect(current).toEqual({ state: "BAR" });
     });
     testMachine.events.SWITCH();
   });
@@ -178,28 +178,6 @@ describe("transitions", () => {
 
     machine.events.SWITCH();
   });
-  it("should trigger when entering state by event", () => {
-    expect.assertions(1);
-    const [states, createMachine] = createStates({
-      FOO: () => ({}),
-      BAR: () => ({}),
-    });
-
-    const machine = createMachine({
-      FOO: {
-        SWITCH: () => () => states.BAR(),
-      },
-      BAR: {
-        SWITCH: () => () => states.FOO(),
-      },
-    })(states.FOO());
-
-    machine.subscribe("BAR", "SWITCH", () => {
-      expect(true).toBe(true);
-    });
-
-    machine.events.SWITCH();
-  });
   it("should trigger when entering state by event from state", () => {
     expect.assertions(3);
     const [states, createMachine] = createStates({
@@ -216,10 +194,10 @@ describe("transitions", () => {
       },
     })(states.FOO());
 
-    machine.subscribe("BAR", "SWITCH", "FOO", (state, params, prevState) => {
-      expect(state).toEqual({ state: "BAR" });
+    machine.subscribe("FOO => SWITCH => BAR", (prev, params, current) => {
+      expect(prev).toEqual({ state: "FOO" });
       expect(params).toEqual([]);
-      expect(prevState).toEqual({ state: "FOO" });
+      expect(current).toEqual({ state: "BAR" });
     });
 
     machine.events.SWITCH();

@@ -187,36 +187,12 @@ const dispose = machine.subscribe(["FOO", "BAR"], (state) => {
 })
 
 const dispose = machine.subscribe(
-  "FOO",
-  "switch",
-  (state, eventParams) => {
-    // When entering state by event
-  }
-)
-
-const dispose = machine.subscribe(
-  ["FOO", "BAR"],
-  "switch",
-  (state, eventParams) => {
-    // When entering either state by event
-  }
-)
-
-const dispose = machine.subscribe(
-  "FOO",
-  "switch",
-  "BAR",
-  (state, eventParams, prevState) => {
-    // When entering state by event from state
-  }
-)
-
-const dispose = machine.subscribe(
-  ["FOO", "BAR"],
-  "switch",
-  "BAZ"
-  (state, eventParams, prevState) => {
-    // When entering either state by event from state
+  "FOO => switch => BAR",
+  (prev, eventParams, current) => {
+    // When transition occurs
+    return () => {
+      // Dispose when transitioning again
+    }
   }
 )
 ```

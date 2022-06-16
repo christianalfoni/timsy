@@ -5,7 +5,7 @@ export type TStateCreators = Record<string, TStateCreator>;
 type TStateCreatorWithState<State extends TStateCreators> = {
   [K in keyof State]: (
     ...params: Parameters<State[K]>
-  ) => K extends string ? ReturnType<State[K]> & { state: K } : never;
+  ) => ReturnType<State[K]> & { state: K };
 };
 
 export type TStateCreatorsWithState<T extends TStateCreators> = Record<
@@ -53,12 +53,14 @@ type SubscribeTransition<
     | `${infer S} => ${infer A} => ${infer C}`
     | `${infer S} => ${infer A} => ${infer C}`[]
     ? (
-        current: ReturnType<States[C]>,
+        prev: ReturnType<States[S]>,
         eventParams: Parameters<T[C][A]>,
-        prev: ReturnType<States[S]>
+        current: ReturnType<States[C]>
       ) => void | (() => void)
     : SS extends string
     ? (current: ReturnType<States[SS]>) => void | (() => void)
+    : SS extends string[]
+    ? (current: ReturnType<States[SS[number]]>) => void | (() => void)
     : never
 ) => () => void;
 
@@ -71,7 +73,7 @@ export type Subscriber<
   State extends TStateCreators,
   T extends TTransitions<State>
 > = (
-  state: {
+  prevState: {
     [S in keyof State]: { state: S } & ReturnType<State[S]>;
   }[keyof State],
   event: {
@@ -82,7 +84,7 @@ export type Subscriber<
       };
     }[keyof T[K]];
   }[keyof T],
-  prevState: {
+  state: {
     [S in keyof State]: { state: S } & ReturnType<State[S]>;
   }[keyof State]
 ) => void;
@@ -167,7 +169,7 @@ function createMachine<
             );
             subscribers.forEach((subscriber) =>
               // @ts-ignore
-              subscriber(currentState, { params, type: event }, prevState)
+              subscriber(prevState, { params, type: event }, currentState)
             );
           }
         };
@@ -202,30 +204,35 @@ function createMachine<
         const transitions: string[] = Array.isArray(state) ? state : [state];
 
         let subscriptionDisposer: (() => void) | undefined;
-        const disposer = subscribe((currentState, event, prevState) => {
+        const disposer = subscribe((prevState, event, currentState) => {
           const hasChangedWithinStates =
-            transitions.includes(currentState.state) &&
-            transitions.includes(prevState?.state);
-          const hasChangedToState =
-            state.includes(currentState.state) &&
-            !state.includes(prevState?.state);
+            transitions.includes(currentState.state as string) &&
+            transitions.includes(prevState?.state as string);
 
           if (hasChangedWithinStates) {
             return;
           }
 
-          if (hasChangedToState) {
-            subscriptionDisposer = cb(currentState, event.params, prevState);
-          } else {
-            subscriptionDisposer?.();
-            subscriptionDisposer = undefined;
+          if (transitions.includes(currentState.state as string)) {
+            subscriptionDisposer = cb(currentState);
+            return;
           }
+
+          if (
+            transitions.includes(
+              `${prevState?.state} => ${event.type} => ${currentState.state}`
+            )
+          ) {
+            subscriptionDisposer = cb(prevState, event.params, currentState);
+            return;
+          }
+
+          subscriptionDisposer?.();
+          subscriptionDisposer = undefined;
         });
 
-        const hasChangedToState = transitions.find(
-          (transition) =>
-            transition.indexOf(currentState.state) >
-            transition.lastIndexOf("=>")
+        const hasChangedToState = transitions.includes(
+          currentState.state as string
         );
 
         // Trigger for initial state, if applicable
