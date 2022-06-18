@@ -33,34 +33,26 @@ type TTransition<T extends TTransitions<any>> =
   | {
       [S in keyof T]: {
         [A in keyof T[S]]: S extends string
-          ?
-              | (A extends string
-                  ? `${S} => ${A} => ${ReturnType<
-                      ReturnType<T[S][A]>
-                    >["state"]}`
-                  : never)
-              | S
+          ? A extends string
+            ? `${S} => ${A} => ${ReturnType<ReturnType<T[S][A]>>["state"]}`
+            : never
           : never;
       }[keyof T[S]];
     }[keyof T];
 
 type SubscribeTransition<
-  States extends TStateCreators,
-  T extends TTransitions<States>
+  State extends TStateCreators,
+  T extends TTransitions<State>
 > = <SS extends TTransition<T> | TTransition<T>[]>(
   current: SS,
-  effect: SS extends
+  cb: SS extends
     | `${infer S} => ${infer A} => ${infer C}`
     | `${infer S} => ${infer A} => ${infer C}`[]
     ? (
-        prev: ReturnType<States[S]>,
+        prev: ReturnType<State[S]>,
         eventParams: Parameters<T[C][A]>,
-        current: ReturnType<States[C]>
+        current: ReturnType<State[C]>
       ) => void | (() => void)
-    : SS extends string
-    ? (current: ReturnType<States[SS]>) => void | (() => void)
-    : SS extends string[]
-    ? (current: ReturnType<States[SS[number]]>) => void | (() => void)
     : never
 ) => () => void;
 
@@ -69,11 +61,24 @@ export type Subscribe<
   T extends TTransitions<State>
 > = (cb: Subscriber<State, T>) => () => void;
 
+export type SubscribeEnter<State extends TStateCreators> = <
+  SS extends keyof State | (keyof State)[]
+>(
+  enter: SS,
+  cb: (
+    current: SS extends string[]
+      ? ReturnType<State[SS[number]]>
+      : SS extends string
+      ? ReturnType<State[SS]>
+      : never
+  ) => void | (() => void)
+) => () => void;
+
 export type Subscriber<
   State extends TStateCreators,
   T extends TTransitions<State>
 > = (
-  prevState: {
+  state: {
     [S in keyof State]: { state: S } & ReturnType<State[S]>;
   }[keyof State],
   event: {
@@ -84,7 +89,7 @@ export type Subscriber<
       };
     }[keyof T[K]];
   }[keyof T],
-  state: {
+  prevState: {
     [S in keyof State]: { state: S } & ReturnType<State[S]>;
   }[keyof State]
 ) => void;
@@ -110,7 +115,9 @@ export type StateMachine<
   getState(): {
     [S in keyof State]: ReturnType<TStateCreatorWithState<State>[S]>;
   }[keyof State];
-  subscribe: Subscribe<State, T> & SubscribeTransition<State, T>;
+  onEnter: SubscribeEnter<State>;
+  onTransition: SubscribeTransition<State, T>;
+  subscribe: Subscribe<State, T>;
 };
 
 export type StateMachineCreator<
@@ -169,7 +176,7 @@ function createMachine<
             );
             subscribers.forEach((subscriber) =>
               // @ts-ignore
-              subscriber(prevState, { params, type: event }, currentState)
+              subscriber(currentState, { params, type: event }, prevState)
             );
           }
         };
@@ -193,18 +200,40 @@ function createMachine<
       getState() {
         return currentState;
       },
-      subscribe(...params: any[]) {
-        const state = params[0];
-        const cb = params[1] || params[0];
+      onEnter(state, cb) {
+        let enterDisposer: (() => void) | undefined;
+        const states = Array.isArray(state) ? state : [state];
+        const subscribeDisposer = subscribe((current, _, prev) => {
+          // @ts-ignore
+          if (states.includes(current.state) && states.includes(prev?.state)) {
+            return;
+          }
 
-        if (typeof state === "function") {
-          return subscribe(state);
+          // @ts-ignore
+          if (states.includes(current.state) && !states.includes(prev?.state)) {
+            // @ts-ignore
+            enterDisposer = cb(current);
+          } else {
+            enterDisposer?.();
+          }
+        });
+
+        // @ts-ignore
+        if (states.includes(currentState.state)) {
+          // @ts-ignore
+          enterDisposer = cb(currentState);
         }
 
+        return () => {
+          enterDisposer?.();
+          subscribeDisposer();
+        };
+      },
+      onTransition(state, cb) {
         const transitions: string[] = Array.isArray(state) ? state : [state];
 
-        let subscriptionDisposer: (() => void) | undefined;
-        const disposer = subscribe((prevState, event, currentState) => {
+        let subscriptionDisposer: (() => void) | void;
+        const disposer = subscribe((currentState, event, prevState) => {
           const hasChangedWithinStates =
             transitions.includes(currentState.state as string) &&
             transitions.includes(prevState?.state as string);
@@ -214,13 +243,15 @@ function createMachine<
           }
 
           if (transitions.includes(currentState.state as string)) {
-            subscriptionDisposer = cb(currentState);
+            subscriptionDisposer = cb(currentState, event.params, prevState);
             return;
           }
 
           if (
             transitions.includes(
-              `${prevState?.state} => ${event.type} => ${currentState.state}`
+              `${String(prevState?.state)} => ${String(event.type)} => ${String(
+                currentState.state
+              )}`
             )
           ) {
             subscriptionDisposer = cb(prevState, event.params, currentState);
@@ -231,19 +262,13 @@ function createMachine<
           subscriptionDisposer = undefined;
         });
 
-        const hasChangedToState = transitions.includes(
-          currentState.state as string
-        );
-
-        // Trigger for initial state, if applicable
-        if (hasChangedToState) {
-          subscriptionDisposer = cb(currentState);
-        }
-
         return () => {
           disposer();
           subscriptionDisposer?.();
         };
+      },
+      subscribe(cb) {
+        return subscribe(cb);
       },
     };
   };

@@ -1,17 +1,18 @@
 import * as React from "react";
-import { PickState, StateMachine, createStates } from "./core";
+import { StateMachine, createStates } from "./core";
 
-export function useMachine<T extends StateMachine<any, any>>(
-  constructMachine: () => T,
-  deps?: unknown[]
-): [ReturnType<T["getState"]>, T["events"], T["subscribe"]];
-export function useMachine<T extends StateMachine<any, any>>(
-  passedMachine: T
-): [ReturnType<T["getState"]>, T["events"], T["subscribe"]];
 export function useMachine<T extends StateMachine<any, any>>(
   passedMachine: T | (() => T),
   deps?: unknown[]
-) {
+): [
+  ReturnType<T["getState"]>,
+  T["events"],
+  {
+    useSubscribe: T["subscribe"];
+    useOnEnter: T["onEnter"];
+    useOnTransition: T["onTransition"];
+  }
+] {
   let machine: T;
 
   if (typeof passedMachine === "function") {
@@ -29,10 +30,32 @@ export function useMachine<T extends StateMachine<any, any>>(
     [machine]
   );
 
+  const useOnEnter = React.useMemo(
+    () =>
+      (...params: any[]) => {
+        // @ts-ignore
+        React.useEffect(() => machine.onEnter(...params), [machine]);
+      },
+    [machine]
+  );
+
+  const useOnTransition = React.useMemo(
+    () =>
+      (...params: any[]) => {
+        // @ts-ignore
+        React.useEffect(() => machine.onTransition(...params), [machine]);
+      },
+    [machine]
+  );
+
   return [
     React.useSyncExternalStore(machine.subscribe, machine.getState),
     machine.events,
-    useSubscribe,
+    {
+      useSubscribe,
+      useOnEnter,
+      useOnTransition,
+    },
   ] as any;
 }
 
@@ -85,7 +108,7 @@ export const usePromise = <T extends PromiseCallback>(
   cb: T,
   deps: unknown[] = []
 ) => {
-  const [state, events, useSubscribe] = useMachine(
+  const [state, events, hooks] = useMachine(
     () =>
       createPromiseMachine<T>()({
         state: "IDLE",
@@ -93,11 +116,11 @@ export const usePromise = <T extends PromiseCallback>(
     deps
   );
 
-  useSubscribe("PENDING", ({ params }) => {
+  hooks.useOnEnter("PENDING", ({ params }) => {
     cb(...params)
       .then(events.resolve)
       .catch(events.reject);
   });
 
-  return [state, events.execute, useSubscribe] as const;
+  return [state, events.execute, hooks] as const;
 };

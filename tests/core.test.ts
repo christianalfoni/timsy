@@ -104,7 +104,7 @@ describe("machine", () => {
       },
     });
     const testMachine = spawn(states.FOO());
-    testMachine.subscribe((prev, event, current) => {
+    testMachine.subscribe((current, event, prev) => {
       expect(prev).toEqual({ state: "FOO" });
       expect(event).toEqual({ type: "SWITCH", params: [] });
       expect(current).toEqual({ state: "BAR" });
@@ -130,7 +130,7 @@ describe("transitions", () => {
       },
     })(states.FOO());
 
-    machine.subscribe("FOO", () => {
+    machine.onEnter("FOO", () => {
       expect(true).toBe(true);
     });
   });
@@ -152,7 +152,7 @@ describe("transitions", () => {
 
     machine.events.SWITCH();
 
-    machine.subscribe("BAR", () => {
+    machine.onEnter("BAR", () => {
       expect(true).toBe(true);
     });
   });
@@ -172,7 +172,7 @@ describe("transitions", () => {
       },
     })(states.FOO());
 
-    machine.subscribe(["FOO", "BAR"], () => {
+    machine.onEnter(["FOO", "BAR"], () => {
       expect(true).toBe(true);
     });
 
@@ -194,7 +194,7 @@ describe("transitions", () => {
       },
     })(states.FOO());
 
-    machine.subscribe("FOO => SWITCH => BAR", (prev, params, current) => {
+    machine.onTransition("FOO => SWITCH => BAR", (prev, params, current) => {
       expect(prev).toEqual({ state: "FOO" });
       expect(params).toEqual([]);
       expect(current).toEqual({ state: "BAR" });

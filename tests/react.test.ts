@@ -58,9 +58,9 @@ describe("hooks", () => {
     expect.assertions(1);
     renderHook(() => {
       const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , useSubscribe] = testMachine;
+      const [, , { useOnEnter }] = testMachine;
 
-      useSubscribe("FOO", () => {
+      useOnEnter("FOO", () => {
         expect(true).toBe(true);
       });
 
@@ -72,12 +72,12 @@ describe("hooks", () => {
     let hasRunBarEffect = false;
     const { result } = renderHook(() => {
       const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , useSubscribe] = testMachine;
+      const [, , { useOnEnter }] = testMachine;
 
-      useSubscribe("FOO", () => () => {
+      useOnEnter("FOO", () => () => {
         hasDisposedFooEffect = true;
       });
-      useSubscribe("BAR", () => {
+      useOnEnter("BAR", () => {
         hasRunBarEffect = true;
       });
 
@@ -96,9 +96,9 @@ describe("hooks", () => {
     let hasRunFooBarEffect = false;
     const { result } = renderHook(() => {
       const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , useSubscribe] = testMachine;
+      const [, , { useOnEnter }] = testMachine;
 
-      useSubscribe(["FOO", "BAR"], () => {
+      useOnEnter(["FOO", "BAR"], () => {
         hasRunFooBarEffect = true;
         return () => {
           hasDisposedFooBarEffect = true;
@@ -120,9 +120,9 @@ describe("hooks", () => {
     let hasRunBarEffect = false;
     const { result } = renderHook(() => {
       const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , useSubscribe] = testMachine;
+      const [, , { useOnTransition }] = testMachine;
 
-      useSubscribe("FOO => SWITCH => BAR", () => {
+      useOnTransition("FOO => SWITCH => BAR", () => {
         hasRunBarEffect = true;
       });
 
@@ -139,9 +139,9 @@ describe("hooks", () => {
     let runBarEffectCount = 0;
     const { result } = renderHook(() => {
       const testMachine = useMachine(() => machine(states.BAR()), []);
-      const [, , useSubscribe] = testMachine;
+      const [, , { useOnTransition }] = testMachine;
 
-      useSubscribe(["FOO => SWITCH => BAR", "BAR => SWITCH => FOO"], () => {
+      useOnTransition(["FOO => SWITCH => BAR", "BAR => SWITCH => FOO"], () => {
         runBarEffectCount++;
       });
 
@@ -166,9 +166,9 @@ describe("hooks", () => {
     let runResolvedEffectCount = 0;
     const { result } = renderHook(() => {
       const testMachine = usePromise(async (name: string) => `hello ${name}`);
-      const [, , useSubscribe] = testMachine;
+      const [, , { useOnEnter }] = testMachine;
 
-      useSubscribe("RESOLVED", () => {
+      useOnEnter("RESOLVED", () => {
         runResolvedEffectCount++;
       });
 
