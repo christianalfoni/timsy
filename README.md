@@ -2,52 +2,64 @@
 
 Agnostic functional state machine with epic type support
 
-## Using Timsy with React
+## Core API
 
-### Make state explicit
+```ts
+import { createStates } from "timsy"
 
-```tsx
-import { createStates, States, match } from "timsy"
-
-const [states] = createStates({
-  NOT_LOADED: () => ({}),
-  LOADING: () => ({}),
-  LOADED: (data: Data) => ({ data }),
-  ERROR: (error: Error) => ({ error }),
+const [states, createMachine] = createStates({
+  FOO: () => ({}),
+  BAR: () => ({}),
 })
 
-type DataState = States<typeof states>
+const runMachine = createMachine({
+  FOO: {
+    switch: () => () => states.BAR(),
+  },
+  BAR: {
+    switch: () => () => states.FOO(),
+  },
+})
 
-const DataComponent: React.FC = () => {
-  const [state, setState] = useState<DataState>(states.NOT_LOADED())
+const machine = runMachine(states.FOO())
 
-  return (
-    <div>
-      {match(state, {
-        NOT_LOADED: () => (
-          <button
-            onClick={() => {
-              fetch("/data")
-                .then((response) => response.json())
-                .then((data) => setState(states.LOADED(data)))
-                .catch((error) => setState(states.ERROR(error)))
-            }}>
-            Load Data
-          </button>
-        ),
-        LOADING: () => "Loading...",
-        LOADED: ({ data }) => JSON.stringify(data),
-        ERROR: ({ error }) => `ops, ${error.message}`,
-      })}
-    </div>
-  )
-}
+machine.events.switch()
+
+const currentState = machine.getState()
+
+const dispose = machine.subscribe((state, event, prevState) => {
+  // Any change
+})
+
+const dispose = machine.onEnter("FOO", (state) => {
+  // When entering state
+  return () => {
+    // When exiting state
+  }
+})
+
+const dispose = machine.onEnter(["FOO", "BAR"], (state) => {
+  // When first entering either state
+  return () => {
+    // When exiting to other state
+  }
+})
+
+const dispose = machine.onTransition(
+  "FOO => switch => BAR",
+  (prev, eventParams, current) => {
+    // When transition occurs
+    return () => {
+      // Dispose when transitioning again
+    }
+  }
+)
 ```
 
-### Make state predictable
+## Using Timsy with React
 
 ```tsx
-import { createStates, useMachine, match } from "timsy"
+import { createStates, useMachine, useEnter, match } from "timsy"
 
 const [states, createMachine] = createStates({
   NOT_LOADED: () => ({}),
@@ -69,11 +81,11 @@ const dataMachine = createMachine({
 })
 
 const DataComponent: React.FC = () => {
-  const [state, events, useTransitionEffect] = useMachine(() =>
+  const [state, events, machine] = useMachine(() =>
     dataMachine(states.NOT_LOADED())
   )
 
-  useTransitionEffect("LOADING", () => {
+  useEnter(machine, "LOADING", () => {
     fetch("/data")
       .then((response) => response.json())
       .then(events.loadSuccess)
@@ -111,14 +123,14 @@ const DataComponent: React.FC = () => {
 - Consume directly or subscribe to transitions
 
 ```tsx
-import { usePromise, match } from "timsy"
+import { usePromise, match, useEnter } from "timsy"
 
 const DataComponent: React.FC = () => {
-  const [state, load, useTransitionEffect] = usePromise(() =>
+  const [state, load, machine] = usePromise(() =>
     fetch("/data").then((response) => response.json())
   )
 
-  useTransitionEffect("RESOLVED", ({ value }) => {
+  useEnter(machine, "RESOLVED", ({ value }) => {
     // Pass resolved data into other state stores or react
     // to transitions
   })
@@ -141,60 +153,6 @@ const DataComponent: React.FC = () => {
     </div>
   )
 }
-```
-
-## Core API
-
-```ts
-import { createStates } from "timsy"
-
-const [states, createMachine] = createStates({
-  FOO: () => ({}),
-  BAR: () => ({}),
-})
-
-const runMachine = createMachine({
-  FOO: {
-    switch: () => () => states.BAR(),
-  },
-  BAR: {
-    switch: () => () => states.FOO(),
-  },
-})
-
-const machine = runMachine(states.FOO())
-
-machine.events.switch()
-
-const currentState = machine.getState()
-
-const dispose = machine.subscribe((state, event, prevState) => {
-  // Any change
-})
-
-const dispose = machine.subscribe("FOO", (state) => {
-  // When entering state
-  return () => {
-    // When exiting state
-  }
-})
-
-const dispose = machine.subscribe(["FOO", "BAR"], (state) => {
-  // When first entering either state
-  return () => {
-    // When exiting to other state
-  }
-})
-
-const dispose = machine.subscribe(
-  "FOO => switch => BAR",
-  (prev, eventParams, current) => {
-    // When transition occurs
-    return () => {
-      // Dispose when transitioning again
-    }
-  }
-)
 ```
 
 ## Publish

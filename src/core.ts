@@ -21,6 +21,12 @@ export interface IEvent {
   type: string;
 }
 
+export type PickStateCreators<T extends StateMachine<any, any>> =
+  T extends StateMachine<infer States, any> ? States : never;
+
+export type PickTransitions<T extends StateMachine<any, any>> =
+  T extends StateMachine<any, infer Transitions> ? Transitions : never;
+
 export type TTransitions<T extends TStateCreators> = {
   [S in keyof T]: {
     [event: string]: (
@@ -29,7 +35,7 @@ export type TTransitions<T extends TStateCreators> = {
   };
 };
 
-type TTransition<T extends TTransitions<any>> =
+export type TTransition<T extends TTransitions<any>> =
   | {
       [S in keyof T]: {
         [A in keyof T[S]]: S extends string

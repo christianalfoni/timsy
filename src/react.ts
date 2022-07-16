@@ -1,18 +1,82 @@
 import * as React from "react";
-import { StateMachine, createStates } from "./core";
+import {
+  PickStateCreators,
+  PickTransitions,
+  StateMachine,
+  Subscriber,
+  TTransition,
+  createStates,
+} from "./core";
+
+export const useSubscribe = <
+  T extends StateMachine<any, any>,
+  State extends PickStateCreators<T>,
+  Transitions extends PickTransitions<T>
+>(
+  machine: T,
+  cb: Subscriber<State, Transitions>,
+  deps: any[] = []
+) => {
+  React.useEffect(
+    // @ts-ignore
+    () => machine.subscribe(cb),
+    deps.concat(machine)
+  );
+};
+
+export const useEnter = <
+  T extends StateMachine<any, any>,
+  State extends PickStateCreators<T>,
+  SS extends keyof State | keyof State[]
+>(
+  machine: T,
+  state: SS,
+  cb: (
+    current: SS extends string[]
+      ? ReturnType<State[SS[number]]>
+      : SS extends string
+      ? ReturnType<State[SS]>
+      : never
+  ) => void | (() => void),
+  deps: any[] = []
+) => {
+  React.useEffect(
+    // @ts-ignore
+    () => machine.onEnter(state, cb),
+    deps.concat(machine)
+  );
+};
+
+export const useTransition = <
+  T extends StateMachine<any, any>,
+  State extends PickStateCreators<T>,
+  Transitions extends PickTransitions<T>,
+  SS extends TTransition<Transitions> | TTransition<Transitions>[]
+>(
+  machine: T,
+  current: SS,
+  cb: SS extends
+    | `${infer S} => ${infer A} => ${infer C}`
+    | `${infer S} => ${infer A} => ${infer C}`[]
+    ? (
+        prev: ReturnType<State[S]>,
+        eventParams: Parameters<Transitions[C][A]>,
+        current: ReturnType<State[C]>
+      ) => void | (() => void)
+    : never,
+  deps: any[] = []
+) => {
+  React.useEffect(
+    // @ts-ignore
+    () => machine.onTransition(current, cb),
+    deps.concat(machine)
+  );
+};
 
 export function useMachine<T extends StateMachine<any, any>>(
   passedMachine: T | (() => T),
   deps?: unknown[]
-): [
-  ReturnType<T["getState"]>,
-  T["events"],
-  {
-    useSubscribe: T["subscribe"];
-    useOnEnter: T["onEnter"];
-    useOnTransition: T["onTransition"];
-  }
-] {
+): [state: ReturnType<T["getState"]>, events: T["events"], machine: T] {
   let machine: T;
 
   if (typeof passedMachine === "function") {
@@ -21,42 +85,12 @@ export function useMachine<T extends StateMachine<any, any>>(
     machine = passedMachine;
   }
 
-  const useSubscribe = React.useMemo(
-    () =>
-      (...params: any[]) => {
-        // @ts-ignore
-        React.useEffect(() => machine.subscribe(...params), [machine]);
-      },
-    [machine]
-  );
+  const state = React.useSyncExternalStore(machine.subscribe, machine.getState);
 
-  const useOnEnter = React.useMemo(
-    () =>
-      (...params: any[]) => {
-        // @ts-ignore
-        React.useEffect(() => machine.onEnter(...params), [machine]);
-      },
-    [machine]
+  return React.useMemo(
+    () => [state, machine.events, machine],
+    [state, machine]
   );
-
-  const useOnTransition = React.useMemo(
-    () =>
-      (...params: any[]) => {
-        // @ts-ignore
-        React.useEffect(() => machine.onTransition(...params), [machine]);
-      },
-    [machine]
-  );
-
-  return [
-    React.useSyncExternalStore(machine.subscribe, machine.getState),
-    machine.events,
-    {
-      useSubscribe,
-      useOnEnter,
-      useOnTransition,
-    },
-  ] as any;
 }
 
 type PromiseCallback = (...params: any[]) => Promise<any>;
@@ -108,7 +142,7 @@ export const usePromise = <T extends PromiseCallback>(
   cb: T,
   deps: unknown[] = []
 ) => {
-  const [state, events, hooks] = useMachine(
+  const [state, events, machine] = useMachine(
     () =>
       createPromiseMachine<T>()({
         state: "IDLE",
@@ -116,11 +150,11 @@ export const usePromise = <T extends PromiseCallback>(
     deps
   );
 
-  hooks.useOnEnter("PENDING", ({ params }) => {
+  useEnter(machine, "PENDING", ({ params }) => {
     cb(...params)
-      .then(events.resolve)
-      .catch(events.reject);
+      .then(machine.events.resolve)
+      .catch(machine.events.reject);
   });
 
-  return [state, events.execute, hooks] as const;
+  return [state, events.execute, machine] as const;
 };
