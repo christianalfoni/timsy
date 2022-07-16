@@ -1,12 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { createStates } from "timsy";
-import {
-  useEnter,
-  useMachine,
-  usePromise,
-  useSubscribe,
-  useTransition,
-} from "timsy/react";
+import { useEnter, useMachine, usePromise, useTransition } from "timsy/react";
 
 const [states, createMachine] = createStates({
   FOO: () => ({}),
