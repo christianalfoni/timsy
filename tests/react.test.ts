@@ -1,6 +1,12 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { createStates } from "timsy";
-import { useMachine, usePromise } from "timsy/react";
+import {
+  useEnter,
+  useMachine,
+  usePromise,
+  useSubscribe,
+  useTransition,
+} from "timsy/react";
 
 const [states, createMachine] = createStates({
   FOO: () => ({}),
@@ -8,7 +14,7 @@ const [states, createMachine] = createStates({
   BAZ: () => ({}),
 });
 
-const machine = createMachine({
+const spawnMachine = createMachine({
   FOO: {
     SWITCH: () => () => states.BAR(),
     SWITCH_SAME: () => (state) => state,
@@ -22,13 +28,13 @@ const machine = createMachine({
 
 describe("hooks", () => {
   it("should consume a machine through a hook", async () => {
-    const { result } = renderHook(() => useMachine(machine(states.FOO())));
+    const { result } = renderHook(() => useMachine(spawnMachine(states.FOO())));
 
     expect(result.current[0]).toEqual({ state: "FOO" });
   });
   it("should update hook state when machine changes state", async () => {
     const { result } = renderHook(() =>
-      useMachine(() => machine(states.FOO()), [])
+      useMachine(() => spawnMachine(states.FOO()), [])
     );
 
     expect(result.current[0]).toEqual({ state: "FOO" });
@@ -43,7 +49,7 @@ describe("hooks", () => {
     let reconcileCount = 0;
     const { result } = renderHook(() => {
       reconcileCount++;
-      return useMachine(() => machine(states.FOO()), []);
+      return useMachine(() => spawnMachine(states.FOO()), []);
     });
 
     expect(result.current[0]).toEqual({ state: "FOO" });
@@ -57,10 +63,10 @@ describe("hooks", () => {
   it("should trigger effect when transitioning into initial state", async () => {
     expect.assertions(1);
     renderHook(() => {
-      const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , { useOnEnter }] = testMachine;
+      const testMachine = useMachine(() => spawnMachine(states.FOO()), []);
+      const [, , machine] = testMachine;
 
-      useOnEnter("FOO", () => {
+      useEnter(machine, "FOO", () => {
         expect(true).toBe(true);
       });
 
@@ -71,13 +77,13 @@ describe("hooks", () => {
     let hasDisposedFooEffect = false;
     let hasRunBarEffect = false;
     const { result } = renderHook(() => {
-      const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , { useOnEnter }] = testMachine;
+      const testMachine = useMachine(() => spawnMachine(states.FOO()), []);
+      const [, , machine] = testMachine;
 
-      useOnEnter("FOO", () => () => {
+      useEnter(machine, "FOO", () => () => {
         hasDisposedFooEffect = true;
       });
-      useOnEnter("BAR", () => {
+      useEnter(machine, "BAR", () => {
         hasRunBarEffect = true;
       });
 
@@ -95,10 +101,10 @@ describe("hooks", () => {
     let hasDisposedFooBarEffect = false;
     let hasRunFooBarEffect = false;
     const { result } = renderHook(() => {
-      const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , { useOnEnter }] = testMachine;
+      const testMachine = useMachine(() => spawnMachine(states.FOO()), []);
+      const [, , machine] = testMachine;
 
-      useOnEnter(["FOO", "BAR"], () => {
+      useEnter(machine, ["FOO", "BAR"], () => {
         hasRunFooBarEffect = true;
         return () => {
           hasDisposedFooBarEffect = true;
@@ -119,10 +125,10 @@ describe("hooks", () => {
   it("should handle state with event effect", async () => {
     let hasRunBarEffect = false;
     const { result } = renderHook(() => {
-      const testMachine = useMachine(() => machine(states.FOO()), []);
-      const [, , { useOnTransition }] = testMachine;
+      const testMachine = useMachine(() => spawnMachine(states.FOO()), []);
+      const [, , machine] = testMachine;
 
-      useOnTransition("FOO => SWITCH => BAR", () => {
+      useTransition(machine, "FOO => SWITCH => BAR", () => {
         hasRunBarEffect = true;
       });
 
@@ -138,12 +144,16 @@ describe("hooks", () => {
   it("should handle multiple states with event effect", async () => {
     let runBarEffectCount = 0;
     const { result } = renderHook(() => {
-      const testMachine = useMachine(() => machine(states.BAR()), []);
-      const [, , { useOnTransition }] = testMachine;
+      const testMachine = useMachine(() => spawnMachine(states.BAR()), []);
+      const [, , machine] = testMachine;
 
-      useOnTransition(["FOO => SWITCH => BAR", "BAR => SWITCH => FOO"], () => {
-        runBarEffectCount++;
-      });
+      useTransition(
+        machine,
+        ["FOO => SWITCH => BAR", "BAR => SWITCH => FOO"],
+        () => {
+          runBarEffectCount++;
+        }
+      );
 
       return testMachine;
     });
@@ -166,9 +176,9 @@ describe("hooks", () => {
     let runResolvedEffectCount = 0;
     const { result } = renderHook(() => {
       const testMachine = usePromise(async (name: string) => `hello ${name}`);
-      const [, , { useOnEnter }] = testMachine;
+      const [, , machine] = testMachine;
 
-      useOnEnter("RESOLVED", () => {
+      useEnter(machine, "RESOLVED", () => {
         runResolvedEffectCount++;
       });
 

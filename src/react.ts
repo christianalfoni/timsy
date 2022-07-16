@@ -27,7 +27,7 @@ export const useSubscribe = <
 export const useEnter = <
   T extends StateMachine<any, any>,
   State extends PickStateCreators<T>,
-  SS extends keyof State | keyof State[]
+  SS extends keyof State | (keyof State)[]
 >(
   machine: T,
   state: SS,
