@@ -5,7 +5,7 @@ import {
   StateMachine,
   Subscriber,
   TTransition,
-  createStates,
+  createMachine,
 } from "./core";
 
 export const useSubscribe = <
@@ -98,44 +98,45 @@ type PromiseCallback = (...params: any[]) => Promise<any>;
 let cachedMachine: any;
 
 function createPromiseMachine<T extends PromiseCallback>() {
-  function createMachine() {
-    const [states, createMachine] = createStates({
-      IDLE: () => ({}),
-      PENDING: (params: Parameters<T>) => ({ params }),
-      RESOLVED: (value: Awaited<ReturnType<T>>) => ({ value }),
-      REJECTED: (error: unknown) => ({ error }),
-    });
-
-    return createMachine({
-      IDLE: {
-        execute:
-          (...params: Parameters<T>) =>
-          () =>
-            states.PENDING(params),
+  function createPromiseMachine() {
+    return createMachine(
+      {
+        IDLE: () => ({}),
+        PENDING: (params: Parameters<T>) => ({ params }),
+        RESOLVED: (value: Awaited<ReturnType<T>>) => ({ value }),
+        REJECTED: (error: unknown) => ({ error }),
       },
-      PENDING: {
-        resolve: (value: Awaited<ReturnType<T>>) => () =>
-          states.RESOLVED(value),
-        reject: (error: unknown) => () => states.REJECTED(error),
-      },
-      RESOLVED: {
-        execute:
-          (...params: Parameters<T>) =>
-          () =>
-            states.PENDING(params),
-      },
-      REJECTED: {
-        execute:
-          (...params: Parameters<T>) =>
-          () =>
-            states.PENDING(params),
-      },
-    });
+      (states) => ({
+        IDLE: {
+          execute:
+            (...params: Parameters<T>) =>
+            () =>
+              states.PENDING(params),
+        },
+        PENDING: {
+          resolve: (value: Awaited<ReturnType<T>>) => () =>
+            states.RESOLVED(value),
+          reject: (error: unknown) => () => states.REJECTED(error),
+        },
+        RESOLVED: {
+          execute:
+            (...params: Parameters<T>) =>
+            () =>
+              states.PENDING(params),
+        },
+        REJECTED: {
+          execute:
+            (...params: Parameters<T>) =>
+            () =>
+              states.PENDING(params),
+        },
+      })
+    );
   }
 
   return (
-    cachedMachine ? cachedMachine : (cachedMachine = createMachine())
-  ) as ReturnType<typeof createMachine>;
+    cachedMachine ? cachedMachine : (cachedMachine = createPromiseMachine())
+  ) as ReturnType<typeof createPromiseMachine>;
 }
 
 export const usePromise = <T extends PromiseCallback>(

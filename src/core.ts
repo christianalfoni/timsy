@@ -133,14 +133,13 @@ export type StateMachineCreator<
   initialState: ReturnType<TStateCreatorWithState<State>[keyof State]>
 ) => StateMachine<State, T>;
 
-export function createStates<State extends TStateCreators>(
-  states: State
-): [
-  TStateCreatorWithState<State>,
-  <T extends TTransitions<State>>(
-    transitions: T
-  ) => StateMachineCreator<State, T>
-] {
+export function createMachine<
+  State extends TStateCreators,
+  T extends TTransitions<State>
+>(
+  states: State,
+  transitionsCallback: (states: TStateCreatorWithState<State>) => T
+): StateMachineCreator<State, T> {
   const stateCreators = {} as TStateCreatorWithState<State>;
 
   for (const state in states) {
@@ -151,19 +150,13 @@ export function createStates<State extends TStateCreators>(
     });
   }
 
-  return [stateCreators, createMachine];
-}
-
-function createMachine<
-  State extends TStateCreators,
-  T extends TTransitions<State>
->(transitions: T): StateMachineCreator<State, T> {
   return (initialState) => {
     let isDisposed = false;
     let currentState = initialState;
 
     const subscribers: Subscriber<State, T>[] = [];
     const events = {} as ReturnType<StateMachineCreator<State, T>>["events"];
+    const transitions = transitionsCallback(stateCreators);
 
     for (const state in transitions) {
       for (const event in transitions[state]) {

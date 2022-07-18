@@ -5,24 +5,37 @@ Agnostic functional state machine with epic type support
 ## Core API
 
 ```ts
-import { createStates } from "timsy"
+import { createMachine } from "timsy"
 
-const [states, createMachine] = createStates({
-  FOO: () => ({}),
-  BAR: () => ({}),
-})
-
-const runMachine = createMachine({
-  FOO: {
-    switch: () => () => states.BAR(),
+const spawn = createMachine(
+  // Define your states as factories, returning optional related
+  // values to that state
+  {
+    FOO: () => ({}),
+    BAR: () => ({}),
   },
-  BAR: {
-    switch: () => () => states.FOO(),
-  },
-})
+  // Define your transitions with a callback providing the state
+  // factories and expects a transitions declarations to be returned
+  (states) => ({
+    // Every state needs to be defined
+    FOO: {
+      // With optional events to be handled in the state. The handler
+      // is defined by a function taking optional parameters, which
+      // returns a function providing the current state, expecting to
+      // the same or new state
+      switch: () => () => states.BAR(),
+    },
+    BAR: {
+      switch: () => () => states.FOO(),
+    },
+  })
+)
 
-const machine = runMachine(states.FOO())
+// Spawn the machine giving the initial state object.
+// Typing is inferred
+const machine = spawn({ state: "FOO" })
 
+// Call any events where typing is inferred
 machine.events.switch()
 
 const currentState = machine.getState()
@@ -59,30 +72,31 @@ const dispose = machine.onTransition(
 ## Using Timsy with React
 
 ```tsx
-import { createStates, useMachine, useEnter, match } from "timsy"
+import { createMachine, useMachine, useEnter, match } from "timsy"
 
-const [states, createMachine] = createStates({
-  NOT_LOADED: () => ({}),
-  LOADING: () => ({}),
-  LOADED: (data: Data) => ({ data }),
-  ERROR: (error: Error) => ({ error }),
-})
-
-const dataMachine = createMachine({
-  NOT_LOADED: {
-    load: () => () => states.LOADING(),
+const spawnDataMachine = createMachine(
+  {
+    NOT_LOADED: () => ({}),
+    LOADING: () => ({}),
+    LOADED: (data: Data) => ({ data }),
+    ERROR: (error: Error) => ({ error }),
   },
-  LOADING: {
-    loadSuccess: (data: Data) => () => states.LOADED(data),
-    loadError: (error: Error) => () => states.ERROR(error),
-  },
-  LOADED: {},
-  ERROR: {},
-})
+  (states) => ({
+    NOT_LOADED: {
+      load: () => () => states.LOADING(),
+    },
+    LOADING: {
+      loadSuccess: (data: Data) => () => states.LOADED(data),
+      loadError: (error: Error) => () => states.ERROR(error),
+    },
+    LOADED: {},
+    ERROR: {},
+  })
+)
 
 const DataComponent: React.FC = () => {
   const [state, events, machine] = useMachine(() =>
-    dataMachine(states.NOT_LOADED())
+    spawnDataMachine({ state: "NOT_LOADED" })
   )
 
   useEnter(machine, "LOADING", () => {
